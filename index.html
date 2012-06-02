@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>WebSocket</title>
+
+<style>
+body{font:0.9em arial,helvetica;margin:0;color:#0f0;background-color:#000;}
+#log{width:99.5%;overflow:auto;padding-left:.5%;}
+#msg{width:inherit;background-color:#333;color:#0f0;border:0;}
+#msg:focus{outline:0;}
+#bottom{position:absolute;bottom:0;width:100%;}
+#top{position:absolute;top:0;z-index:500;}
+</style>
+
+<script>
+	var Sockit={
+		sock:false,
+		conOnce:false,
+		delayRestart:20, //in seconds
+		wasReconnecting:false,
+		
+		load:function(){
+			try{
+				Sockit.sock=new WebSocket("ws://localhost:8080/GitHub/CloudCompute/master.php"); //do we need MozWebSocket?
+				Sockit.sock.onopen=function(){
+					Sockit.conOnce=true;
+					Sockit.log("Connection Established.");
+					if(Sockit.wasReconnecting){
+						alert("onopen");
+						Sockit.stopReconnect();
+					}
+				}
+				Sockit.sock.onclose=function(){
+					if(Sockit.conOnce){
+						Sockit.reconnect();
+					}
+						
+					else{
+						alert("You need a better browser.");
+					}
+				};
+				
+				Sockit.sock.onmessage=function(event){
+					Sockit.log(event.data);
+					eval(event.data);
+				};
+			} catch(ex){Sockit.log(ex);}
+
+		},
+		
+		log:function(msg){
+			document.getElementById('log').innerHTML+=msg+"<br />";
+		},
+		
+		reconnect:function(){
+			var container=document.createElement("div");
+			container.style.position="fixed";
+			container.style.top="50%";
+			container.style.left="0";
+			container.style.width="100%";
+			
+			var dialog=document.createElement("div");
+			dialog.style.left="50%";
+			dialog.style.width="150px";
+			dialog.style.padding="15px 10px 5px 10px";
+			var width=dialog.style.width.slice(0,dialog.style.width.length-2);
+			var paddings=parseInt(dialog.style.paddingLeft.slice(0,dialog.style.paddingLeft.length-2))+parseInt(dialog.style.paddingRight.slice(0,dialog.style.paddingRight.length-2));
+			width=parseInt(width);
+			paddings=parseInt(paddings);
+			dialog.style.marginLeft="-"+(width+paddings)/2+"px";
+			dialog.style.height="50px";
+			var height=dialog.style.height.slice(0,dialog.style.height.length-2);
+			var paddings=parseInt(dialog.style.paddingTop.slice(0,dialog.style.paddingTop.length-2))+parseInt(dialog.style.paddingBottom.slice(0,dialog.style.paddingBottom.length-2));
+			height=parseInt(height);
+			paddings=parseInt(paddings);
+			dialog.style.marginTop="-"+(height+paddings)/2+"px";
+			dialog.style.backgroundColor="#fff";
+			dialog.style.border="2px solid #000";
+			dialog.style.outline="2px solid #fff"
+			dialog.style.position="absolute";
+			dialog.style.textAlign="center";
+			dialog.style.color="#000";
+			dialog.innerHTML='Reconnecting in <span id="time">1:00</span><p style="margin-top:6px;"><a onclick="Sockit.setReconnecting();Sockit.load();" style="color:#00f;">Reconnect now.</a></p>';
+			dialog.id="dialog";
+			
+			container.appendChild(dialog);
+			document.body.appendChild(container);
+			
+			Sockit.timeLeft=Sockit.delayRestart;
+			setTimeout(function(){Sockit.setReconnecting();Sockit.load();},Sockit.delayRestart*1000);
+			inter=setInterval(Sockit.checkTime,1000);
+			Sockit.log("Attempting to reconnect in " + Sockit.timeLeft + " seconds");
+		},
+		
+		checkTime:function(){
+			Sockit.timeLeft--;
+			document.getElementById('time').innerHTML=Sockit.timeLeft;
+			if(Sockit.timeLeft>9){
+				document.getElementById('time').innerHTML="0:"+Sockit.timeLeft;
+			}
+			else{
+				document.getElementById('time').innerHTML="0:0"+Sockit.timeLeft;
+			}
+		},
+		
+		setReconnecting:function(){
+			Sockit.log("setReconnecting");
+			clearInterval(inter);
+			Sockit.log(inter+" after remove");
+			Sockit.wasReconnecting=true;
+			document.getElementById("dialog").innerHTML='Currently reconnecting.<p style="margin-top:6px;">Please wait...</p>';
+		},
+		
+		stopReconnect:function(){
+			var id=document.getElementById("dialog");
+			id.parentNode.removeChild(id);
+		}
+		
+	}
+
+	function onkey(event){
+		var message=document.getElementById('msg').value;
+		if(event.keyCode==13 && message!=""){
+			Sockit.sock.send(message);
+			Sockit.log('Sent: '+message);
+			document.getElementById('msg').value='';
+		}
+	}
+	
+	var Computing={
+	functions:new Array(),
+	
+	newFunction:function(){
+	Computing.functions['prime']=new Function('alert("hello")');
+	//Computing.functions['prime']();
+	}
+	}
+	
+	window.addEventListener('load',function(){Sockit.load();Computing.newFunction();},false);
+</script>
+</head>
+<body>
+	<div id="top"></div>
+	<div id="log"></div>
+	<div id="bottom">
+		<input type="input" id="msg" onkeypress="onkey(event)" />
+	</div>
+</body>
+</html>
