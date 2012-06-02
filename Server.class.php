@@ -240,16 +240,24 @@ class Server {
 		}
 	}
 
+	private $pollTimeDelay = 60;
+	private $pollStartTime;
 	/**
 	 * This function goes through and attempts to contact nodes. If unable
 	 * get a response from a node, it disconnects it.
 	 */
 	public function pollSockets() {
-		for($i=0;$i<count($this->nodeArray);$i++) {
-			$encoded = $this->nodeArray[$i]->getSpec()->encode("ping");
-			$result = @socket_send($this->nodeArray[$i]->getSocket(),$encoded,strlen($encoded),null);
-			if($result===false)
-				$this->droppedNode($i);
+		if(!isset($this->pollStartTime)) {
+			$this->pollStartTime = time();
+		}
+		if(time()-$this->pollStartTime>=$this->pollTimeDelay) {
+			$this->pollStartTime = time();
+			for($i=0;$i<count($this->nodeArray);$i++) {
+				$encoded = $this->nodeArray[$i]->getSpec()->encode("ping");
+				$result = @socket_send($this->nodeArray[$i]->getSocket(),$encoded,strlen($encoded),null);
+				if($result===false)
+					$this->droppedNode($i);
+			}
 		}
 	}
 
@@ -273,9 +281,11 @@ class Server {
 		else
 			$socket = null;
 
-		if(!is_null($socket)) {
-			@socket_shutdown($socket);
-			socket_close($socket);
+		for($i=0;$i<count($socket);$i++)
+			echo "Deleting ".count($socket)." Socket and ".count($node)." Node.\n";
+		if(!is_null($socket[0])) {
+			@socket_shutdown($socket[0]);
+			socket_close($socket[0]);
 			unset($socket);
 		}
 		if(!is_null($node)) {
@@ -314,6 +324,9 @@ class Server {
 			$this->upgradeSockets(1);
 			$this->receiveData();
 			$this->pollSockets();
+			//Test the resource consumption of script.. This should cause a
+			//heartbeat in resource consumption.
+			sleep(10);
 		}
 	}
 }
