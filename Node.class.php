@@ -32,7 +32,7 @@ class Node {
 
 		//Get the handshake from the socket
 		$getHandshake = array($socket);
-		socket_select($getHandshake, $write = null, $except = null, 1);
+		socket_select($getHandshake, $write = null, $except = null, 0);
 		//If we don't receive any data from the client. Disconnect it.
 		if(count($getHandshake)!=1){
 			echo "DID NOT RECEIVE HANDSHAKE!\n";
