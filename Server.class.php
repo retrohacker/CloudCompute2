@@ -212,12 +212,11 @@ class Server {
 	}
 	
 	public function process($node, $text) {
-		echo $text;
 		$action = $node->getSpec()->decode($text);
-		echo $action;
 		switch($action){
-			case "hello": $this->send($client,"short string!"); break;
-			default: $this->send($client,$action); break;
+			case "hello": $this->send($node,"short string!"); break;
+			
+			default: $this->send($node,$action); break;
 		}
 	}
 
@@ -235,7 +234,7 @@ class Server {
 			$node = $this->getNodeBySocket($socket);
 			if($node) {
 				$bytes = @socket_recv($socket, $data, 2048, 0);
-				//Do stuff with received data
+				$this->process($node,$data);
 			}
 		}
 	}
@@ -313,7 +312,7 @@ class Server {
 			$this->getNewConnections();
 			$this->upgradeSockets(1);
 			$this->receiveData();
-			$this->pollSockets();
+			//$this->pollSockets();
 		}
 	}
 }
