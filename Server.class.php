@@ -148,52 +148,20 @@ class Server {
 			//Add the socket to the allocatedSockets array if
 			//successful
 			if($success)
+			{
 				$this->allocatedSockets[] = $socket;
+				global $verbose;
+				if($verbose) {
+					echo "allocatedSockets now contains: ";
+					for($i=0;$i<count($this->allocatedSockets);$i++) {
+						echo $this->allocatedSockets[$i].",";
+					}
+					echo"\n";
+				}
+			}
 		}
 	}
-
-	/**
-	 * Move an active socket into the disconnectedSockets queue
-	 * returns true if successful, false otherwise
-	 */
-	private function disconnect($socket) {
-		echo "test\n";
-		//Search for the socket in the queues searching the one with
-		//the least number of clients first
-		$unallocatedKey = array_search($socket, $this->unallocatedSockets);
-		$allocatedKey;
-		//If the socket is not in the unallocated array, search the allocated
-		if($unallocatedKey===false) 
-			$allocatedKey = array_search($socket, $this->allocatedSockets);
-		//If the socket is not in either array, it is not known to the server
-		//and can not be disconnected thus this function failed
-		if($unallocatedKey===false&&$allocatedKey===false) {
-			echo "Did not find socket!\n";
-			return false;
-		}
-		//Remove the socket from the array it was found in
-		/**
-		 * TODO: Check the length of the returned array from array_splice
-		 * to ensure it is 1. If it is not we should report an error and
-		 * crash.
-		 */
-		if($unallocatedKey!==false)
-			array_splice($this->unallocatedSockets,$unallocatedKey,1);
-		else if($allocatedKey!==false)
-			array_splice($this->allocatedSockets,$allocatedKey,1);
-		else
-			return false;
-		echo "Disconnected Socket";
-	}
-
-	/**
-	 * Deletes up to n nodes whos sockets are in the disconnectedSockets
-	 * queue
-	 */
-	private function deactivateNode($n) {
-		
-	}
-
+	
 	/**
 	 * Finds the node assigned to a socket. If no node is using the socket
 	 * this function returns false
@@ -224,7 +192,7 @@ class Server {
 	 * @param $text 
 	*/
 	public function send($node, $text) {
-		$encoded = $node->spec->encode($text);
+		$encoded = $node->getSpec()->encode($text);
 		
 		if(!is_array($encoded)){
 			socket_write($node->getSocket(), $encoded, strlen($encoded));
@@ -259,7 +227,6 @@ class Server {
 	 * a request token for the node that received it.
 	 */
 	public function receiveData() {
-		/*
 		$changedSockets = $this->allocatedSockets;
 		//Checks if there is any new data returning immediately
 		@socket_select($changedSockets, $write = null, $except = null, 0);
@@ -267,14 +234,67 @@ class Server {
 		foreach($changedSockets as $socket) {
 			$node = $this->getNodeBySocket($socket);
 			if($node) {
-				$bytes = socket_recv($socket, $data, 2048, 0);
-				if($bytes!=0){
-					echo "received: ".$bytes." bytes of data\n";
-					$this->process($node, $data);
-				}
+				$bytes = @socket_recv($socket, $data, 2048, 0);
+				//Do stuff with received data
 			}
 		}
-		 */
+	}
+
+	/**
+	 * This function goes through and attempts to contact nodes. If unable
+	 * get a response from a node, it disconnects it.
+	 */
+	public function pollSockets() {
+		for($i=0;$i<count($this->nodeArray);$i++) {
+			$encoded = $this->nodeArray[$i]->getSpec()->encode("ping");
+			$result = @socket_send($this->nodeArray[$i]->getSocket(),$encoded,strlen($encoded),null);
+			if($result===false)
+				$this->droppedNode($i);
+		}
+	}
+
+	/**
+	 * When the n-th node in the nodeArray timesout, this function is called
+	 * to delete it.
+	 */
+	public function droppedNode($n) {
+		$socket = $this->nodeArray[$n]->getSocket();
+		if($n==0)
+			$node = array_shift($this->nodeArray);
+		else if($n<count($this->nodeArray))
+			$node = array_splice($this->nodeArray,$n-1,1);
+		else
+			$node = null;	
+		$n = $this->getSocketIndex($socket);
+		if($n==0)
+			$socket = array_shift($this->allocatedSockets);
+		else if($n<count($this->allocatedSockets))
+			$socket = array_splice($this->allocatedSockets,$n-1,1);
+		else
+			$socket = null;
+
+		if(!is_null($socket)) {
+			@socket_shutdown($socket);
+			socket_close($socket);
+			unset($socket);
+		}
+		if(!is_null($node)) {
+			unset($node);
+		}
+	}
+
+	/**
+	 * Returns the index of a socket in allocatedSockets. If the socket is not
+	 * found in the array, this function returns -1
+	 * (can be optimized as array should be sorted)
+	 */
+	public function getSocketIndex($socket) {
+		for($i = 0; $i < count($this->allocatedSockets);$i++) {
+			if($socket === $this->allocatedSockets[$i]) {
+				return $i;
+			}
+		}
+		return -1;
 	}
 
 	/**
@@ -292,8 +312,8 @@ class Server {
 		while(true) {
 			$this->getNewConnections();
 			$this->upgradeSockets(1);
-			$this->deactivateNode(1);
 			$this->receiveData();
+			$this->pollSockets();
 		}
 	}
 }
