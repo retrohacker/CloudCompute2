@@ -47,40 +47,36 @@ TODO
 In this section we will have a TODO list. When we finish one of the items on the
 list simply put a X in place of the space to the left side.
 
-  1.	Rewrite index.html. It should just be a log detailing the communication
-	between the client and the server.
+	Rewrite index.html. It should just be a log detailing the communication
+		between the client and the server.
 
-x 2.	Remove the ACE editor. We won't need it during this stage in development
-	so it should be safe to remove. It will make the git log look nicer as
-	well.
+	Implement fix for non-supported clients crashing socket server in
+		Client.class.php
 
-  3.	Implement fix for non-supported clients crashing socket server in
-	Client.class.php
+	Discuss and object oriented approach to this project.
 
-  4.	Discuss and object oriented approach to this project.
+	Figure out what functionality we want to retain from the MPI standard,
+		what is practical, and what is impossible with the limitations of
+		websockets and dynamically connecting and disconnecting nodes. 
 
-  5.	Figure out what functionality we want to retain from the MPI standard,
-	what is practical, and what is impossible with the limitations of
-	websockets and dynamically connecting and disconnecting nodes. 
+	Update Client.class.php to be truely object oriented.
 
-  7. 	Update Client.class.php to be truely object oriented.
+	Many of our php classes are going to be independent objects. We need to
+		explore the possibility of running these as independent services on a
+		unix workstation. This will increase the scalability of the final
+		product allowing the Server.class.php and Client.class.php scripts
+		to run on one server while the Request.class.php script runs on a second
+		server while the Data.class.php script and MYSQL database run on yet a
+		third server, etc. etc. It will also allow easy rewrite of code in the
+		future if/when we run into limitations with PHP we can begin rewriting
+		modules one at a time in C without having to rewrite the entire program.
+		Its obvious how this will be beneficial.
 
-  8.	Many of our php classes are going to be independent objects. We need to
-	explore the possibility of running these as independent services on a
-	unix workstation. This will increase the scalability of the final
-	product allowing the Server.class.php and Client.class.php scripts
-	to run on one server while the Request.class.php script runs on a second
-	server while the Data.class.php script and MYSQL database run on yet a
-	third server, etc. etc. It will also allow easy rewrite of code in the
-	future if/when we run into limitations with PHP we can begin rewriting
-	modules one at a time in C without having to rewrite the entire program.
-	Its obvious how this will be beneficial.
+	Rewrite Server.class.php using the new source code from the boom-box
+		website merged with the object oriented approach required for the new
+		message passing interface.
 
-  9.	Rewrite Server.class.php using the new source code from the boom-box
-	website merged with the object oriented approach required for the new
-	message passing interface.
+	Identify the variable types of each private and public variable declared
+		inside of the classes and add it to the documentation.
 
- 10.	Identify the variable types of each private and public variable declared
-	inside of the classes and add it to the documentation.
-
- 11.	Alter Client.class.php to behave more like a node and less like a connection
+	Alter Client.class.php to behave more like a node and less like a connection
