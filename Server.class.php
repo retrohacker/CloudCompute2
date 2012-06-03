@@ -4,6 +4,9 @@
  * groups, creating nodes, etc.
  */
 class Server {
+	//TEMORARILY SETTING THESE BECAUSE CONFIG FILE IS NOT WORKING
+	private $mainLoopDelay = 10;
+	private $pollSocketDelay = 20;
 	//The address of the server
 	private $address;
 
@@ -240,7 +243,6 @@ class Server {
 		}
 	}
 
-	private $pollTimeDelay = 60;
 	private $pollStartTime;
 	/**
 	 * This function goes through and attempts to contact nodes. If unable
@@ -250,7 +252,7 @@ class Server {
 		if(!isset($this->pollStartTime)) {
 			$this->pollStartTime = time();
 		}
-		if(time()-$this->pollStartTime>=$this->pollTimeDelay) {
+		if(time()-$this->pollStartTime>=$this->pollSocketDelay) {
 			$this->pollStartTime = time();
 			for($i=0;$i<count($this->nodeArray);$i++) {
 				$encoded = $this->nodeArray[$i]->getSpec()->encode("ping");
@@ -326,7 +328,7 @@ class Server {
 			$this->pollSockets();
 			//Test the resource consumption of script.. This should cause a
 			//heartbeat in resource consumption.
-			sleep(10);
+			sleep($this->mainLoopDelay);
 		}
 	}
 }
