@@ -22,7 +22,7 @@ body{font:0.9em arial,helvetica;margin:0;color:#0f0;background-color:#000;}
 		
 		load:function(){
 			try{
-				Sockit.sock=new WebSocket("ws://localhost:8080/GitHub/CloudCompute/master.php"); //do we need MozWebSocket?
+				Sockit.sock=new WebSocket("ws://127.0.0.1:8080/"); //do we need MozWebSocket?
 				Sockit.sock.onopen=function(){
 					Sockit.conOnce=true;
 					Sockit.log("Connection Established.");
