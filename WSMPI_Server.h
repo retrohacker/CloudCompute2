@@ -10,6 +10,9 @@
 #include <iostream>
 #include <errno.h>
 #include <string.h>
+#include <string>
+#include <list>
+#include "Client.h"
 
 #ifndef WSMPI_SERVER_H_
 #define WSMPI_SERVER_H_
@@ -18,12 +21,14 @@ class WSMPI_Server {
 private:
 	//Stores the ID of the master socket
 	int MasterSocket;
+	std::list<Client *> Nodes;
+	std::list<Client *> Connecting;
 
 	//Used to construct the master socket
 	sockaddr_in MasterSocketInfo;
 
 public:
-	WSMPI_Server(int port, char *address);
+	WSMPI_Server(char *address, int port);
 	int start();
 	virtual ~WSMPI_Server();
 };
