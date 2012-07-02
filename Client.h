@@ -10,6 +10,7 @@
 #include <iostream>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
 
 #ifndef CLIENT_H_
 #define CLIENT_H_
@@ -17,7 +18,7 @@
 class Client {
 private:
 	int nodeID;
-	int soketID; //Using this as both the socket and uniq id
+	int socketID; //Using this as both the socket and uniq id
 	sockaddr_in nodeSocket; //Info about socket i think
 	int nodeSocketLength;
 	bool handshake; //Has the handshake happened
@@ -29,8 +30,8 @@ private:
 public:
 	Client(int);
 	virtual ~Client();
-
 	int getID();
+	void* initalizeClient();
 };
 
 #endif /* CLIENT_H_ */

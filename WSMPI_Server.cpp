@@ -55,42 +55,11 @@ int WSMPI_Server::start() {
 			std::cout << "fail" << "\n";
 		}
 		else {
-			Connecting.push_back(new Client(resp));
-			/*char buf[2048];
-			int len = recv(resp,(void*)buf,sizeof(char)*2048,0);
-
-			std::string keyword("");
-			keyword.reserve(len);
-			keyword.clear();
-			int seek = 0;
-			for(seek=0;seek<len;seek++) {
-				if(buf[seek] == '\n'||buf[seek]=='\r') {
-					keyword.clear();
-				} else if(buf[seek] == ':') {
-					if(keyword.compare("Sec-WebSocket-Key")==0) {
-						break;
-					}
-					keyword.clear();
-				} else if(buf[seek] == ' '){
-
-				} else {
-					keyword+=buf[seek];
-				}
+			Client *newC = new Client(resp);
+			this->Connecting.push_back(newC);
+			for(std::list<Client *>::iterator it = Connecting.begin(); it!=Connecting.end();it++) {
+				std::cout << (*it)->getID() << "\n";
 			}
-			keyword.clear();
-			seek++;
-			while(seek<len) {
-				if(buf[seek] == '\n'||buf[seek]=='\r') {
-					break;
-				} else if(buf[seek] == ' '){
-
-				} else {
-					keyword+=buf[seek];
-				}
-				seek++;
-			}
-			//keyword should now contain the key
-			std::cout << keyword << "\n";*/
 		}
 	}
 }

@@ -6,15 +6,23 @@
  */
 
 #include "Client.h"
-#include <iostream>
+
+//Global
+const char WEBSOCKET_GUID[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+void* Client_initalizeClient(void* self) {
+	Client temp = *(Client*)self;
+	temp.initalizeClient();
+	return NULL;
+}
 
 Client::Client(int id) {
 
 	std::cout << "Creating Node " << id << "\n";
-	char header[2048];
-	int len = recv(id,(void*)header,sizeof(char)*2048,0);
-	parseKey(&header[0],len);
-	std::cout << key;
+	this->socketID = id;
+	pthread_t newThread;
+	Client* temp = this;
+	pthread_create(&newThread, NULL, Client_initalizeClient, (void*)temp);
 }
 
 Client::~Client() {
@@ -25,11 +33,12 @@ void Client::parseKey(char* header, int length) {
 	char *field = strtok(header,"\r\n");
 	char keyword[length];
 	memset(&keyword, '\0', length*sizeof(char));
-	this->key = new char[24];
+	char *keyval = new char[24];
+	this->key = keyval;
 	while(field!=NULL) {
 		int i = 0;
 		int j = 0;
-		while(field[i]!=NULL) {
+		while(field[i]!='\0') {
 			if(field[i]==':') {
 				i++;
 				break;
@@ -44,11 +53,11 @@ void Client::parseKey(char* header, int length) {
 		if(strcmp((char*)keyword, "Sec-WebSocket-Key")==0) {
 			//The current token is the key
 			int k = 0;
-			while(field[i]!=NULL&&k<24) {
+			while(field[i]!='\0'&&k<24) {
 				if(field[i] == ' ') {
 
 				} else {
-					((char*)this->key)[k] = field[i];
+					keyval[k] = field[i];
 					k++;
 				}
 				i++;
@@ -58,4 +67,16 @@ void Client::parseKey(char* header, int length) {
 		memset(&keyword, '\0',length);
 		field = strtok(NULL,"\r\n");
 	}
+}
+
+int Client::getID() {
+	return this->socketID;
+}
+
+void* Client::initalizeClient() {
+	int id = this->socketID;
+	char header[1024];
+	int len = recv(id,(void*)header,sizeof(char)*2048,0);
+	parseKey(&header[0],len);
+	return NULL;
 }
